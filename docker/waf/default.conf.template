@@ -1,0 +1,64 @@
+# ==========================================================================
+# WAF Reverse Proxy - Custom nginx configuration
+# ==========================================================================
+# Based on owasp/modsecurity-crs:nginx-alpine default template.
+# ModSecurity is configured via separate modsecurity.conf (auto-generated).
+#
+# Customizations:
+# - Proxy buffer sizes for Inertia.js (embeds full page data as JSON)
+# - client_max_body_size for file uploads (100MB)
+# ==========================================================================
+
+server_tokens ${SERVER_TOKENS};
+
+# Fix: proxy_headers_hash warning when many proxy_set_header directives
+proxy_headers_hash_max_size 1024;
+proxy_headers_hash_bucket_size 128;
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
+server {
+    listen ${PORT} default_server;
+    server_name ${SERVER_NAME};
+
+    set $always_redirect ${NGINX_ALWAYS_TLS_REDIRECT};
+
+    PROXY_SSL_CONFIG
+
+    # Client body settings (file uploads up to 100MB)
+    client_max_body_size 100M;
+    client_body_buffer_size 128k;
+
+    # Proxy buffer settings for Inertia.js
+    # Inertia responses include full page component data as JSON in HTML
+    # which can be 50-500 KB. Override proxy_buffering from base config.
+    proxy_buffering on;
+    proxy_buffer_size 128k;
+    proxy_buffers 8 256k;
+    proxy_busy_buffers_size 256k;
+    proxy_temp_file_write_size 512k;
+
+    location / {
+        if ($always_redirect = on) {
+            return 301 https://$host$request_uri;
+        }
+
+        include includes/cors.conf;
+        include includes/proxy_backend.conf;
+
+        # Override forwarded headers from base proxy_backend.conf.
+        # Base sets internal WAF values - pass through originals from Traefik.
+        proxy_set_header X-Forwarded-For $http_x_forwarded_for;
+        proxy_set_header X-Real-IP $http_x_real_ip;
+        proxy_set_header X-Forwarded-Port $http_x_forwarded_port;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+
+        index index.html index.htm;
+        root /usr/share/nginx/html;
+    }
+
+    include includes/location_common.conf;
+}

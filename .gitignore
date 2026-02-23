@@ -1,0 +1,48 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
+
+# Docker volumes data (if stored locally)
+docker/mysql-data/
+docker/redis-data/
+
+# Environment files
+.env
+docker-compose.override.yml
+
+# Laravel (in src/)
+src/node_modules/
+src/vendor/
+src/.env
+src/.env.backup
+src/.env.production
+src/storage/*.key
+src/public/hot
+src/public/storage
+src/public/build/
+src/.phpunit.result.cache
+
+# Laravel storage (compiled/temp/logs)
+src/storage/framework/cache/*
+src/storage/framework/sessions/*
+src/storage/framework/views/*
+src/storage/logs/*
+
+# Uploaded files (user data)
+src/storage/app/public/form-submissions/*
+
+# Keep .gitkeep files
+!src/storage/framework/cache/.gitkeep
+!src/storage/framework/sessions/.gitkeep
+!src/storage/framework/views/.gitkeep
+!src/storage/logs/.gitkeep
+!src/storage/app/public/form-submissions/.gitkeep
